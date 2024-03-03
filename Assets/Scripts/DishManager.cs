@@ -30,7 +30,7 @@ public class DishManager : MonoBehaviour
     }
     #endregion
 
-    public List<Dish> dishes;
+    private List<Dish> dishes;
 
     // Start is called before the first frame update
     void Start()
@@ -52,29 +52,59 @@ public class DishManager : MonoBehaviour
         return dishes;
     }
 
-    public Dish GetDish(string dishName)
-    {
-        List<Dish> sameNameDishes = dishes.FindAll(dish => dish.Name.ToLower() == dishName.ToLower());
-        if(sameNameDishes.Count > 0)
-            return sameNameDishes[0];
-        else
-            return new Dish("Error Dish", new List<Ingredient>());
-    }
-
-    public Dish GetDish(List<Ingredient> ingredients)
-    {
-        ingredients.Sort();
-        List<Dish> sameNameDishes = dishes.FindAll(dish => dish.Ingredients == ingredients);
-        if(sameNameDishes.Count > 0)
-            return sameNameDishes[0];
-        else
-            return new Dish("Error Dish", new List<Ingredient>());
-    }
-
     public List<Dish> GetAvailableDishes()
     {
         // TODO: Apply restrictions when stations for dishes have no yet been unlocked
         return dishes.FindAll(dish => dish.IsAvailable);
+    }
+
+    /// <summary>
+    /// Get a dish by its name
+    /// </summary>
+    /// <param name="dishName">The string name of the dish</param>
+    /// <returns>A Dish, could be an error dish if the given name does not make a dish</returns>
+    public Dish GetDish(string dishName)
+    {
+        foreach(Dish dish in dishes)
+        {
+            if(dish.Name.ToLower() == dishName.ToLower())
+			{
+				if(!dish.IsAvailable)
+                {
+                    Debug.Log("Warning! This dish exists but is not available!");
+                    return new Dish("Unavailable Dish", new List<Ingredient>());
+                }
+                return dish;
+			}
+        }
+
+        Debug.Log("Error! No dish found with that name.");
+        return new Dish("Error Dish", new List<Ingredient>());
+    }
+
+    /// <summary>
+    /// Get a dish by its ingredients
+    /// </summary>
+    /// <param name="ingredients">The list of ingredients</param>
+    /// <returns>A Dish, could be an error dish if the given ingredients do not make a dish</returns>
+    public Dish GetDish(List<Ingredient> ingredients)
+    {
+        ingredients.Sort();
+        foreach(Dish dish in dishes)
+		{
+            if(dish.Ingredients == ingredients)
+			{
+                if(!dish.IsAvailable)
+                {
+                    Debug.Log("Warning! This dish exists but is not available!");
+                    return new Dish("Unavailable Dish", new List<Ingredient>());
+                }
+                return dish;
+			}
+        }
+
+        Debug.Log("Error! No dish found with those ingredients.");
+        return new Dish("Error Dish", new List<Ingredient>());
     }
 
     public Dish GetRandomDish()
