@@ -109,7 +109,7 @@ public class OrdersManager : MonoBehaviour
 			return;
 		}
 		orders.RemoveAt(orderIndex);
-		Debug.Log($"{completedDish} completed. Order removed.");
+		Debug.Log($"{completedDish.Name} completed. Order removed.");
 
 		string remainingOrderNames = string.Empty;
 		orders.ForEach(order => remainingOrderNames += $" | {order.Name}");
