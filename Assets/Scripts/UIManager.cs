@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public enum MenuState
@@ -34,9 +34,10 @@ public class UIManager : MonoBehaviour
 
     [SerializeField]
     private Canvas canvas;
-
     [SerializeField]
     private GameObject mainMenuUIParent, controlsUIParent, gameUIParent, pauseUIParent, gameEndUIParent;
+    [SerializeField]
+    private GameObject ordersText, plateText;
 
     private MenuState currentMenuState;
 
@@ -62,6 +63,10 @@ public class UIManager : MonoBehaviour
 		}
     }
 
+    /// <summary>
+    /// Initial logic when the menu state changes
+    /// </summary>
+    /// <param name="newMenuState">The new menu state</param>
     public void ChangeMenuState(MenuState newMenuState)
 	{
         // Deactivate all other parent UIs
@@ -78,6 +83,7 @@ public class UIManager : MonoBehaviour
                 break;
             case MenuState.Game:
                 gameUIParent.SetActive(true);
+                UpdateRemainingOrdersText(OrdersManager.instance.GetRemainingOrdersText());
                 break;
             case MenuState.Pause:
                 pauseUIParent.SetActive(true);
@@ -88,5 +94,25 @@ public class UIManager : MonoBehaviour
         }
 
         currentMenuState = newMenuState;
+    }
+
+    /// <summary>
+    /// Update the text for the orders list
+    /// </summary>
+    /// <param name="remainingOrdersText">The new text of the orders list</param>
+    public void UpdateRemainingOrdersText(string remainingOrdersText)
+	{
+        ordersText.GetComponent<TMP_Text>().text = remainingOrdersText;
+    }
+
+    /// <summary>
+    /// Update the list of plated ingredients
+    /// </summary>
+    /// <param name="ingredients">The List of ingredients prepped and plated</param>
+    public void UpdatePlateText(List<Ingredient> ingredients)
+    {
+        string currentPlateText = "Current Plate:";
+        ingredients.ForEach(ingredient => currentPlateText += $"\n{ingredient.ToString()}");
+        plateText.GetComponent<TMP_Text>().text = currentPlateText;
     }
 }

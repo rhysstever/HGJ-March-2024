@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public enum Ingredient
@@ -36,15 +37,17 @@ public class DishManager : MonoBehaviour
     void Start()
     {
         dishes = SetupDishes();
-
-        Debug.Log("Dishes: ");
-        dishes.ForEach(dish => Debug.Log(dish.ToString()));
     }
 
+    /// <summary>
+    /// Creates all dishes that can be made
+    /// </summary>
+    /// <returns>A list of dishes that can be made</returns>
     private List<Dish> SetupDishes()
     {
         List<Dish> dishes = new List<Dish>();
 
+        // Create a Dish object for each possible dish
         dishes.Add(new Dish("Hamburger", new List<Ingredient>() { Ingredient.Bun, Ingredient.Patty }));
         dishes.Add(new Dish("Cheeseburger", new List<Ingredient>() { Ingredient.Bun, Ingredient.Patty, Ingredient.Cheese }));
         dishes.Add(new Dish("Baconburger", new List<Ingredient>() { Ingredient.Bun, Ingredient.Patty, Ingredient.Cheese, Ingredient.Bacon }));
@@ -52,6 +55,10 @@ public class DishManager : MonoBehaviour
         return dishes;
     }
 
+    /// <summary>
+    /// Gets a list of all available Dishes
+    /// </summary>
+    /// <returns>A List of Dish objects that are available</returns>
     public List<Dish> GetAvailableDishes()
     {
         // TODO: Apply restrictions when stations for dishes have no yet been unlocked
@@ -72,14 +79,14 @@ public class DishManager : MonoBehaviour
 				if(!dish.IsAvailable)
                 {
                     Debug.Log("Warning! This dish exists but is not available!");
-                    return new Dish("Unavailable Dish", new List<Ingredient>());
+                    return null;
                 }
                 return dish;
 			}
         }
 
         Debug.Log("Error! No dish found with that name.");
-        return new Dish("Error Dish", new List<Ingredient>());
+        return null;
     }
 
     /// <summary>
@@ -92,21 +99,41 @@ public class DishManager : MonoBehaviour
         ingredients.Sort();
         foreach(Dish dish in dishes)
 		{
-            if(dish.Ingredients == ingredients)
+            dish.Ingredients.Sort();
+            if(AreListsEqual(dish.Ingredients, ingredients))
 			{
                 if(!dish.IsAvailable)
                 {
                     Debug.Log("Warning! This dish exists but is not available!");
-                    return new Dish("Unavailable Dish", new List<Ingredient>());
+                    return null;
                 }
                 return dish;
 			}
         }
 
         Debug.Log("Error! No dish found with those ingredients.");
-        return new Dish("Error Dish", new List<Ingredient>());
+        return null;
     }
 
+    /// <summary>
+    /// Compares two lists of items
+    /// </summary>
+    /// <typeparam name="T">The type of each list</typeparam>
+    /// <param name="list1">The first list</param>
+    /// <param name="list2">The second list</param>
+    /// <returns>Whether the lists are equal</returns>
+    public bool AreListsEqual<T>(List<T> list1, List<T> list2)
+	{
+        var firstNotSecond = list1.Except(list2).ToList();
+        var secondNotFirst = list2.Except(list1).ToList();
+
+        return !firstNotSecond.Any() && !secondNotFirst.Any();
+    }
+
+    /// <summary>
+    /// Get a random dish from the available dishes
+    /// </summary>
+    /// <returns>A random available dish</returns>
     public Dish GetRandomDish()
 	{
         // Get the array of available dish and its length 

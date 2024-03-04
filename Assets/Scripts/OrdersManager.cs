@@ -24,61 +24,121 @@ public class OrdersManager : MonoBehaviour
 	#endregion
 
 	private DishManager dishManager;
-	public List<Dish> orders;
+	private List<Dish> orders;
+	private List<Ingredient> currentPlating;
 
 	// Start is called before the first frame update
 	void Start()
 	{
 		dishManager = DishManager.instance;
 		orders = new List<Dish>();
+		currentPlating = new List<Ingredient>();
 
-		while(orders.Count < 3)
+		// Add 5 random orders to start
+		while(orders.Count < 5)
 		{
-			//AddOrder(GetDish("Hamburger"));
 			AddRandomOrder();
 		}
-
-		Debug.Log("Orders: ");
-		orders.ForEach(order => Debug.Log(order.Name.ToString()));
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-		if(Input.GetKeyDown(KeyCode.Q))
-			FinishOrder(dishManager.GetDish("Hamburger"));
-		if(Input.GetKeyDown(KeyCode.W))
-			FinishOrder(dishManager.GetDish("Cheeseburger"));
-		if(Input.GetKeyDown(KeyCode.E))
-			FinishOrder(dishManager.GetDish("Baconburger"));
+		// Press SPACE to submit the current plate
+		if(Input.GetKeyDown(KeyCode.Space))
+		{
+			SubmitPlate();
+		}
 	}
 
+	/// <summary>
+	/// Add a random order to the order list
+	/// </summary>
 	public void AddRandomOrder()
 	{
 		AddOrder(dishManager.GetRandomDish());
 	}
 
+	/// <summary>
+	/// Add an order to the order list
+	/// </summary>
+	/// <param name="newDish">The Dish to be added to the order list</param>
 	public void AddOrder(Dish newDish)
 	{
 		orders.Add(newDish);
 	}
 
-	public void FinishOrder(Dish completedDish)
+	/// <summary>
+	/// Creates a String describing the remaining orders
+	/// </summary>
+	/// <returns>A String about the remaining orders</returns>
+	public string GetRemainingOrdersText()
 	{
-		int orderIndex = FindNextOrderOf(completedDish);
-		if(orderIndex == -1)
-		{
-			Debug.Log("Error! Completed dish was not an order");
-			return;
-		}
-		orders.RemoveAt(orderIndex);
-		Debug.Log($"{completedDish.Name} completed. Order removed.");
+		string remainingOrdersText = $"Remaining Orders:";
 
-		string remainingOrderNames = string.Empty;
-		orders.ForEach(order => remainingOrderNames += $" | {order.Name}");
-		Debug.Log($"{remainingOrderNames} remain");
+		for(int i = 0; i < orders.Count; i++)
+			remainingOrdersText += $"\n{orders[i].Name}";
+
+		return remainingOrdersText;
 	}
 
+	/// <summary>
+	/// Clear the current plate
+	/// </summary>
+	public void ClearPlating()
+	{
+		currentPlating.Clear();
+		UIManager.instance.UpdatePlateText(currentPlating);
+	}
+
+	/// <summary>
+	/// Add an ingredient to the plate
+	/// </summary>
+	/// <param name="ingredient">The ingredient that is being added to the plate</param>
+	public void AddToPlate(Ingredient ingredient)
+	{
+		currentPlating.Add(ingredient);
+		UIManager.instance.UpdatePlateText(currentPlating);
+	}
+
+	/// <summary>
+	/// Submits a plate to the order list
+	/// </summary>
+	private void SubmitPlate()
+	{
+		Dish plateDish = dishManager.GetDish(currentPlating);
+
+		if(plateDish == null)
+		{
+			// Return early if the plated dish does not match 
+			Debug.Log("Error! Not a complete dish");
+			return;
+		} 
+		else
+		{
+			int orderIndex = FindNextOrderOf(plateDish);
+			if(orderIndex == -1)
+			{
+				// Return early if the dish is not in the order list 
+				Debug.Log("Error! The dish is not an order");
+				return;
+			}
+			orders.RemoveAt(orderIndex);
+			Debug.Log($"{plateDish.Name} completed. Order removed.");
+
+			// Update UI
+			string remainingOrdersText = GetRemainingOrdersText();
+			UIManager.instance.UpdateRemainingOrdersText(remainingOrdersText);
+		}
+
+		ClearPlating(); // Clear the plate after the dish is submitted
+	}
+
+	/// <summary>
+	/// Finds the first index of a Dish in the order list
+	/// </summary>
+	/// <param name="dish">A Dish object</param>
+	/// <returns>The index of the Dish in the order list. Returns -1 if not in list</returns>
 	private int FindNextOrderOf(Dish dish)
 	{
 		for(int i = 0; i < orders.Count; i++)
